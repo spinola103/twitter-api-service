@@ -17,6 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "node-cache": "^5.1.2",
     "twitter-api-v2": "^1.24.0"
