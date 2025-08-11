@@ -120,7 +120,7 @@ async function getUserTweets(username, maxResults = 5) {
     // Get user timeline with comprehensive fields
     rateLimiter.recordRequest();
     const timeline = await rwClient.v2.userTimeline(user.data.id, {
-      max_results: maxResults,
+      max_results: Math.min(maxResults, 100), // Ensure we don't exceed API limits
       exclude: ['retweets', 'replies'], // Only original tweets
       'tweet.fields': [
         'created_at',
@@ -133,9 +133,22 @@ async function getUserTweets(username, maxResults = 5) {
       expansions: ['attachments.media_keys']
     });
 
-    const tweets = timeline.data || [];
+    // Debug logging
+    console.log(`Timeline response for @${username}:`, {
+      hasData: !!timeline.data,
+      dataType: typeof timeline.data,
+      isArray: Array.isArray(timeline.data),
+      dataLength: timeline.data ? timeline.data.length : 0
+    });
+
+    const tweets = Array.isArray(timeline.data) ? timeline.data : [];
     const mediaMap = timeline.includes?.media ? 
       Object.fromEntries(timeline.includes.media.map(media => [media.media_key, media])) : {};
+
+    // Check if we have any tweets
+    if (tweets.length === 0) {
+      console.log(`No tweets found for @${username}`);
+    }
 
     // Process tweets with enhanced data
     const processedTweets = tweets.map((tweet, index) => {
@@ -196,14 +209,28 @@ async function getUserTweets(username, maxResults = 5) {
   } catch (error) {
     console.error(`Error fetching tweets for @${username}:`, error);
     
-    if (error.code === 429) {
+    // Handle specific Twitter API errors
+    if (error.data?.errors) {
+      const apiError = error.data.errors[0];
+      if (apiError.code === 50) {
+        throw new Error(`User @${username} not found`);
+      } else if (apiError.code === 63) {
+        throw new Error(`User @${username} has been suspended`);
+      } else if (apiError.code === 179) {
+        throw new Error(`User @${username} is private`);
+      }
+    }
+    
+    if (error.code === 429 || error.status === 429) {
       throw new Error('Twitter API rate limit exceeded');
-    } else if (error.code === 401) {
+    } else if (error.code === 401 || error.status === 401) {
       throw new Error('Twitter API authentication failed');
-    } else if (error.code === 404) {
+    } else if (error.code === 404 || error.status === 404) {
       throw new Error(`User @${username} not found or is private`);
+    } else if (error.code === 403 || error.status === 403) {
+      throw new Error(`Access forbidden for user @${username}`);
     } else {
-      throw new Error(`API Error: ${error.message}`);
+      throw new Error(`API Error: ${error.message || 'Unknown error occurred'}`);
     }
   }
 }
