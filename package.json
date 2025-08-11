@@ -1,0 +1,27 @@
+{
+  "name": "twitter-api-service",
+  "version": "1.0.0",
+  "description": "Twitter API service for monitoring tweets",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "twitter",
+    "api",
+    "monitoring",
+    "n8n"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "node-cache": "^5.1.2",
+    "twitter-api-v2": "^1.24.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
