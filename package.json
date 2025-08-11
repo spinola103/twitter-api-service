@@ -1,6 +1,7 @@
 {
   "name": "twitter-api-service",
   "version": "1.0.0",
+  "type": "module",
   "description": "Twitter API service for monitoring tweets",
   "main": "server.js",
   "scripts": {
